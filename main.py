@@ -3,53 +3,37 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # 🔐 Token del bot
 TOKEN = '7898142673:AAHSHjtleMrgdi_ZOduDuRHc3V4x6B5KqAA'
-# 🖼️ Imagen que se mostrará
-IMAGE_URL = 'https://i.postimg.cc/MGQf6tKG/IMG-8234.jpg'
-# 🔗 Enlace del botón "DESBLOQUEAR"
-BOTON_URL = 'https://t.me/share/url?url=https://t.me/jineteras'
-
 bot = telebot.TeleBot(TOKEN)
 
-# 🔘 Botonera con texto personalizado
+# 🖼️ Imagen a mostrar
+IMAGE_URL = 'https://i.postimg.cc/MGQf6tKG/IMG-8234.jpg'
+
+# 🔗 URL del botón principal
+BOTON_URL = 'https://t.me/share/url?url=https://t.me/jineteras'
+
+# 🎯 Crear la botonera
 def crear_botonera():
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
         InlineKeyboardButton("🔐𝐃𝐄𝐒𝐁𝐋𝐎𝐐𝐔𝐄𝐀𝐑🔐", url=BOTON_URL),
-        InlineKeyboardButton("¿Cómo desbloquear?", callback_data="mostrar_popup")
+        InlineKeyboardButton("¿Cómo desbloquear?", callback_data="mostrar_info")
     )
     return markup
 
-# ▶️ Manejo del comando /start en privado
-@bot.message_handler(commands=['start'])
-def comando_start(message):
-    if message.chat.type != 'private':
-        return  # Ignora grupos y canales
+# 👤 Responder solo en chats privados (incluye /start u otros mensajes)
+@bot.message_handler(func=lambda msg: msg.chat.type == "private")
+def responder_privado(msg):
+    bot.send_photo(
+        chat_id=msg.chat.id,
+        photo=IMAGE_URL,
+        reply_markup=crear_botonera()
+    )
 
-    argumentos = message.text.split()
-    parametro = argumentos[1] if len(argumentos) > 1 else None
+# ℹ️ Acción cuando se pulsa el segundo botón
+@bot.callback_query_handler(func=lambda call: call.data == "mostrar_info")
+def mostrar_info(call):
+    bot.answer_callback_query(call.id)
+    bot.send_message(call.message.chat.id, "Para desbloquear, tocá el botón 🔐𝐃𝐄𝐒𝐁𝐋𝐎𝐐𝐔𝐄𝐀𝐑🔐 y seguí las instrucciones.")
 
-    if parametro == "como_desbloquear":
-        bot.send_photo(
-            chat_id=message.chat.id,
-            photo=IMAGE_URL,
-            reply_markup=crear_botonera()  # 👈 sin caption
-        )
-    else:
-        bot.send_message(
-            chat_id=message.chat.id,
-            text="Bienvenido. Presioná el botón desde el canal para ver cómo desbloquear el contenido."
-        )
-
-# 📩 Acción del botón de ayuda
-@bot.callback_query_handler(func=lambda call: call.data == "mostrar_popup")
-def mostrar_popup(call):
-    if call.message.chat.type == 'private':
-        bot.answer_callback_query(
-            callback_query_id=call.id,
-            text="Presione DESBLOQUEAR y únase a 3 grupos grandes.",
-            show_alert=True
-        )
-
-# ▶️ Ejecutar el bot
-print("✅ Bot iniciado correctamente.")
+# ▶️ Iniciar polling
 bot.polling()
