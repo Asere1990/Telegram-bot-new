@@ -3,15 +3,17 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # 🔐 Token del bot
 TOKEN = '7898142673:AAHSHjtleMrgdi_ZOduDuRHc3V4x6B5KqAA'
-bot = telebot.TeleBot(TOKEN)
 
-# 🖼️ Imagen a mostrar
+# 🖼️ Imagen que se mostrará
 IMAGE_URL = 'https://i.postimg.cc/MGQf6tKG/IMG-8234.jpg'
 
-# 🔗 URL del botón principal
+# 🔗 Enlace del botón "DESBLOQUEAR"
 BOTON_URL = 'https://t.me/share/url?url=https://t.me/jineteras'
 
-# 🎯 Crear la botonera
+# Inicializar bot
+bot = telebot.TeleBot(TOKEN)
+
+# 🔘 Crear botonera
 def crear_botonera():
     markup = InlineKeyboardMarkup(row_width=1)
     markup.add(
@@ -20,20 +22,26 @@ def crear_botonera():
     )
     return markup
 
-# 👤 Responder solo en chats privados (incluye /start u otros mensajes)
-@bot.message_handler(func=lambda msg: msg.chat.type == "private")
-def responder_privado(msg):
-    bot.send_photo(
-        chat_id=msg.chat.id,
-        photo=IMAGE_URL,
-        reply_markup=crear_botonera()
-    )
+# 📩 Comando /start
+@bot.message_handler(commands=['start'])
+def enviar_bienvenida(message):
+    if message.chat.type == "private":
+        bot.send_photo(
+            message.chat.id,
+            IMAGE_URL,
+            caption=None,  # Sin texto debajo de la imagen
+            reply_markup=crear_botonera()
+        )
 
-# ℹ️ Acción cuando se pulsa el segundo botón
-@bot.callback_query_handler(func=lambda call: call.data == "mostrar_info")
-def mostrar_info(call):
-    bot.answer_callback_query(call.id)
-    bot.send_message(call.message.chat.id, "Para desbloquear, tocá el botón 🔐𝐃𝐄𝐒𝐁𝐋𝐎𝐐𝐔𝐄𝐀𝐑🔐 y seguí las instrucciones.")
+# 💬 Manejar botón "¿Cómo desbloquear?"
+@bot.callback_query_handler(func=lambda call: True)
+def manejar_callback(call):
+    if call.data == "mostrar_info":
+        bot.answer_callback_query(
+            call.id,
+            "𝐏𝐫𝐞𝐬𝐢𝐨𝐧𝐚 𝐃𝐄𝐒𝐁𝐋𝐎𝐐𝐔𝐄𝐀𝐑 𝐲 𝐬𝐞𝐥𝐞𝐜𝐜𝐢𝐨𝐧𝐚 𝟑 𝐆𝐑𝐔𝐏𝐎𝐒 𝐆𝐑𝐀𝐍𝐃𝐄𝐒.",
+            show_alert=True
+        )
 
-# ▶️ Iniciar polling
-bot.polling()
+# 🟢 Mantener el bot corriendo
+bot.infinity_polling()
